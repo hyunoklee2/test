@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="stop_app">Kill</string>
+    <string name="app_name">Teleop</string>
+    <string name="camera_topic">compressed_image</string>
+    <string name="joystick_topic">cmd_vel</string>
+    <string name="joystick_extratopic">cmd_extra</string>
+    <string name="joystick_voicetopic">recognizer/output</string>
+    <string name="speech_prompt">Say something&#8230;</string>
+    <string name="speech_not_supported">Sorry! Your device doesn\'t support speech input</string>
+    <string name="tap_on_mic">Tap on mic to speak</string>
+</resources>

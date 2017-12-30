@@ -1,0 +1,4 @@
+#Sat Dec 30 15:03:54 KST 2017
+base.0=/home/hyunokpc2/app/88/android_apps-kinetic/teleop/build/intermediates/transforms/dex/kinetic/debug/folders/1000/1f/main
+renamed.0=classes.dex
+file.0=/home/hyunokpc2/app/88/android_apps-kinetic/teleop/build/intermediates/transforms/dex/kinetic/debug/folders/1000/1f/main/classes.dex

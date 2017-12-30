@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merger version="3"><dataSet config="main"><source path="/home/hyunokpc2/app/88/android_apps-kinetic/teleop/src/main/jniLibs"/></dataSet><dataSet config="kinetic"><source path="/home/hyunokpc2/app/88/android_apps-kinetic/teleop/src/kinetic/jniLibs"/></dataSet><dataSet config="debug"><source path="/home/hyunokpc2/app/88/android_apps-kinetic/teleop/src/debug/jniLibs"/></dataSet><dataSet config="kineticDebug"><source path="/home/hyunokpc2/app/88/android_apps-kinetic/teleop/src/kineticDebug/jniLibs"/></dataSet></merger>

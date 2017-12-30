@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "/home/hyunokpc2/app/88/android_apps-kinetic/teleop/build/intermediates/res/merged/kinetic/debug/layout-v21/notification_action_tombstone.xml",
+        "source": "/home/hyunokpc2/app/88/android_apps-kinetic/teleop/build/intermediates/exploded-aar/com.android.support/appcompat-v7/25.1.0/res/layout-v21/notification_action_tombstone.xml"
+    },
+    {
+        "merged": "/home/hyunokpc2/app/88/android_apps-kinetic/teleop/build/intermediates/res/merged/kinetic/debug/layout-v21/notification_action.xml",
+        "source": "/home/hyunokpc2/app/88/android_apps-kinetic/teleop/build/intermediates/exploded-aar/com.android.support/appcompat-v7/25.1.0/res/layout-v21/notification_action.xml"
+    },
+    {
+        "merged": "/home/hyunokpc2/app/88/android_apps-kinetic/teleop/build/intermediates/res/merged/kinetic/debug/layout-v21/notification_template_custom_big.xml",
+        "source": "/home/hyunokpc2/app/88/android_apps-kinetic/teleop/build/intermediates/exploded-aar/com.android.support/appcompat-v7/25.1.0/res/layout-v21/notification_template_custom_big.xml"
+    },
+    {
+        "merged": "/home/hyunokpc2/app/88/android_apps-kinetic/teleop/build/intermediates/res/merged/kinetic/debug/layout-v21/notification_template_icon_group.xml",
+        "source": "/home/hyunokpc2/app/88/android_apps-kinetic/teleop/build/intermediates/exploded-aar/com.android.support/appcompat-v7/25.1.0/res/layout-v21/notification_template_icon_group.xml"
+    }
+]

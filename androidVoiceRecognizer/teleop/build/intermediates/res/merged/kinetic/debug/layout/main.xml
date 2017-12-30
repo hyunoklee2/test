@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_view"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/top_view"
+        android:layout_width="fill_parent"
+        android:layout_height="50dip"
+        android:background="#ff404040"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/back_button"
+            android:layout_width="wrap_content"
+            android:layout_height="50dip"
+            android:onClick="back"
+            android:text="Back" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/text_topic"
+            android:textColor="#FFFFFF"
+            android:text="Topic" />
+
+        <EditText
+            android:id="@+id/send_topic"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:hint="set topic"
+            android:textColorHint="#FFFFFF"
+            android:textColor="#FFFFFF"
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/text_data"
+            android:textColor="#FFFFFF"
+            android:text="Data" />
+
+        <EditText
+            android:id="@+id/send_command"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:hint="set data"
+            android:textColorHint="#FFFFFF"
+            android:textColor="#FFFFFF"
+            />
+
+        <Button
+            android:id="@+id/publish_button"
+            android:layout_width="wrap_content"
+            android:layout_height="50dip"
+            android:text="Publish" />
+
+        <LinearLayout
+            android:id="@+id/top_bar"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="#ff404040"
+            android:gravity="right"
+            android:orientation="horizontal" />
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp">
+
+        <LinearLayout
+            android:id="@+id/main_layout"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="horizontal" >
+
+        <org.ros.android.view.RosImageView
+            android:id="@+id/image"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_weight=".5"
+            android:src="@mipmap/icon" />
+
+        <LinearLayout
+            android:id="@+id/side_layout"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:orientation="vertical" >
+
+            <View
+                android:layout_width="0dip"
+                android:layout_height="0dip"
+                android:layout_weight="1" />
+
+            <com.github.rosjava.android_apps.teleop.ExtraVirtualJoystickView
+                android:id="@+id/virtual_joystick"
+                android:layout_width="wrap_content"
+                android:layout_height="0dip"
+                android:layout_gravity="center"
+                android:layout_weight="4"
+                android:adjustViewBounds="true" />
+
+            <View
+                android:layout_width="0dip"
+                android:layout_height="0dip"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnSpeak"
+            android:layout_width="200dip"
+            android:layout_height="200dip"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:background="@null"
+            android:scaleType="fitXY"
+            android:src="@mipmap/ico_mic"
+            android:visibility="invisible"/>
+
+        <TextView
+            android:id="@+id/voice_set_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#ff0000"
+            android:text="Voice\nControl" />
+
+        <Switch
+            android:id="@+id/voice_set_switch"
+            android:layout_below="@+id/voice_set_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false"
+            android:textSize="15dp"
+            android:textColor="#ff0000"
+            android:textStyle="bold"
+            android:typeface="monospace"/>
+
+        <Spinner
+            android:id="@+id/spinner1"
+            android:layout_below="@id/voice_set_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:entries="@array/language"
+            android:visibility="invisible"/>
+
+        <TextView
+            android:id="@+id/txtSpeechInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:textColor="@color/colorAccent"
+            android:textSize="20dp"
+            android:textStyle="normal"
+            android:text=" voice to text "
+            android:visibility="invisible" />
+
+    </RelativeLayout>
+
+</LinearLayout>
