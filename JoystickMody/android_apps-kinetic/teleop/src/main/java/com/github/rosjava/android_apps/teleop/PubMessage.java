@@ -19,6 +19,7 @@ package com.github.rosjava.android_apps.teleop;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.TextView;
 
 import org.ros.namespace.GraphName;
@@ -58,7 +59,13 @@ public class PubMessage<T> extends TextView implements NodeMain {
         this.messageType = messageType;
     }
 
-    public void publish() { publisher.publish(message); }
+    public void publish() {
+        Log.d("test","testtttt");
+        if ((message != null) && (publisher != null)) {
+            Log.d("test","testtttt1");
+            publisher.publish(message);
+        }
+    }
 
     @Override
     public GraphName getDefaultNodeName() {
