@@ -19,6 +19,7 @@ package com.github.rosjava.android_apps.teleop;
 import android.content.Context;
 import android.graphics.Point;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -233,6 +234,7 @@ public class JoystickOnlyView extends RelativeLayout implements AnimationListene
   private double currentVelocityLinear[] = {0,0,0};
   private double currentVelocityAgular[] = {0,0,0};
   private Context mContext;
+  private String TAG = "JoystickOnlyView" ;
 
   public JoystickOnlyView(Context context) {
     super(context);
@@ -277,14 +279,15 @@ public class JoystickOnlyView extends RelativeLayout implements AnimationListene
   }
 
   //public void setMessage(final nav_msgs.Odometry message) {
-  public void setMessage( double message[]) {
+  public void setOdometry( nav_msgs.Odometry message) {
     double heading;
     // For some reason the values of z and y seem to be interchanged. If they
     // are not swapped then heading is always incorrect.
-    double w = message[0];
-    double x = message[1];
-    double y = message[2];
-    double z = message[3];
+    double w = message.getPose().getPose().getOrientation().getW();
+    double x = message.getPose().getPose().getOrientation().getX();
+    double y = message.getPose().getPose().getOrientation().getZ();
+    double z = message.getPose().getPose().getOrientation().getY();
+    Log.d(TAG,"Odometri w :" + w +", x :" + x +", y :" + y  +", z :" + z   );
     heading = Math.atan2(2 * y * w - 2 * x * z, x * x - y * y - z * z + w * w) * 180 / Math.PI;
     // Negating the orientation to make the math for rotation in
     // turn-in-place mode easy. Since the actual heading is irrelevant it does
@@ -775,7 +778,7 @@ public class JoystickOnlyView extends RelativeLayout implements AnimationListene
     // screen.
     publishVelocity = false;
     // Publish one last message to make sure the robot stops.
-    ((MainActivity) mContext).getTwist( currentVelocityLinear, currentVelocityAgular );
+    ((MainActivity) mContext).setTwist( currentVelocityLinear, currentVelocityAgular );
     // Turn-in-place should not be active anymore.
     endTurnInPlaceRotation();
     // Hide the orientation tacks.
@@ -920,7 +923,7 @@ public class JoystickOnlyView extends RelativeLayout implements AnimationListene
       @Override
       public void run() {
         if (publishVelocity) {
-          ((MainActivity) mContext).getTwist( currentVelocityLinear, currentVelocityAgular );
+          ((MainActivity) mContext).setTwist( currentVelocityLinear, currentVelocityAgular );
         }
       }
     }, 0, 80);
