@@ -83,13 +83,10 @@ public class MainActivity extends RosAppActivity {
         subOdometry.setMessageCallable(new MessageCallable< String, nav_msgs.Odometry>() {
 			@Override
 			public String call(nav_msgs.Odometry message) {
-
-			    if(pubTwist.message != null) {
-                    pubTwist.message.getLinear().setX(message.getPose().getPose().getOrientation().getW());
-                    pubTwist.publish();
-                    Log.d("test","publish");
-                }
-                Log.d("test","odome" + message.getPose().getPose().getOrientation().getW());
+				if( joystickOnlyView != null ) {
+					joystickOnlyView.setOdometry(message);
+				}
+                //Log.d("test","odome" + message.getPose().getPose().getOrientation().getW());
 				return "test" ;
 			}
 		});
@@ -97,7 +94,7 @@ public class MainActivity extends RosAppActivity {
 		////////////////publish Twist //////////////////////////////////////////////////////////////////////////////////////
 
         pubTwist =  new PubMessage<geometry_msgs.Twist>(mContext) ;
-        pubTwist.setTopicName("/cmd_vel2");
+        pubTwist.setTopicName("/cmd_vel");
         pubTwist.setMessageType(geometry_msgs.Twist._TYPE);
 
 	}
@@ -139,15 +136,17 @@ public class MainActivity extends RosAppActivity {
 
 	}
 
-	public void getOdometry( double messageOdometry[] ){
-		joystickOnlyView.setMessage(messageOdometry);
-		Log.d(TAG,"Odometry : " + messageOdometry[0] + "," + messageOdometry[1]
-				+ "," +messageOdometry[2]);
-	}
+	public void setTwist( double twistLinear[] , double twistArgular[] ){
 
-	public void getTwist( double twistLinear[] , double twistArgular[] ){
-		Log.d(TAG,"twist : " + twistLinear[0] + "," + twistLinear[1] +","+ twistLinear[2] +
-				"/" + twistArgular[0]+ "," + twistArgular[1] + "," + twistArgular[2]);
+		pubTwist.message.getLinear().setX(twistLinear[0]);
+		pubTwist.message.getLinear().setY(twistLinear[1]);
+		pubTwist.message.getLinear().setZ(twistLinear[2]);
+		pubTwist.message.getAngular().setX(twistArgular[0]);
+		pubTwist.message.getAngular().setY(twistArgular[1]);
+		pubTwist.message.getAngular().setZ(twistArgular[2]);
+		pubTwist.publish();
+		Log.d(TAG, "x : " + twistLinear[0]);
+
 	}
 	
 	  @Override
