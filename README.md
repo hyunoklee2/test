@@ -8,7 +8,7 @@
 # Requirements
 
 * Android Studio 3.0.1
-* Android Phone SDK version 15 IceCreamSandwitch  ~ 26 Oreo
+* Android Phone SDK version 15 (IceCreamSandwitch)  ~ 26 (Oreo)
 * ROS Kinentic
 
 # Usage
@@ -17,13 +17,13 @@
 I run Android Studio with sudo permission.Just be careful.
  * import projet by android studio 
 ```
-If you don't want to build project, you just dounload and install Apk file at below link. 
+If you don't want to build project, you just download and install Apk file at below link. 
 The path is as below
 ```
- * android_controllerSample Project
+ * android_controllerSample Project<br />
     https://github.com/AuTURBO/ros-app-tb3-voiceorder/blob/master/android_controllerSample/build/outputs/apk/debug/android_controllerSample-debug.apk
 
- * android_pubsubSample Project
+ * android_pubsubSample Project<br />
   https://github.com/AuTURBO/ros-app-tb3-voiceorder/blob/master/android_pubsubSample/build/outputs/apk/debug/android_pubsubSample-debug.apk
 
 
