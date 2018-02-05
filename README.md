@@ -54,7 +54,7 @@ This module support below funtion.
 funtion list
  - Control turtleBot by voice, Support language is English and Korean
  - Control turtleBot by JoyStick
- - Display TurtleBot Camera View, You can modify Camera View Topic to fit your code at application UI.
+ - Display TurtleBot Camera View, You can modify Topic name of camera view to fit your turtlebot at application UI.
    Support Datatype is sensor_msgs.CompressedImage. Default topic name is "/camera1/image_raw/compressed"
 
 JoystickOnlyView Class does not contain ros related functions. 
