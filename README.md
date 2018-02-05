@@ -31,7 +31,7 @@ The path is as below
 
 * android_10
 ``` 
-This module defines an Android class for ROS communcation.
+This module defines an Android class for ROS.
 Class of ROSJAVA has been copied and modified below. 
 - MessagePub.java was added. The class is a class for ROS Publish.
 - MessageSub.java was added. The class is a class for ROS Subcribe.
