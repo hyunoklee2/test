@@ -1,395 +1,233 @@
-/*
- * Copyright 2016 The TensorFlow Authors. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package com.bcgtgjyb.huanwen.customview.mylibrary;
 
-package org.tensorflow.demo;
-
-import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
-import android.graphics.BitmapFactory;
+import android.animation.ValueAnimator;
+import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Paint.Style;
-import android.graphics.RectF;
-import android.graphics.Typeface;
-import android.media.ImageReader.OnImageAvailableListener;
-import android.os.Handler;
-import android.os.SystemClock;
+import android.util.AttributeSet;
 import android.util.Log;
-import android.util.Size;
-import android.util.TypedValue;
-import android.widget.ImageView;
-import android.widget.Toast;
-
-import org.tensorflow.demo.OverlayView.DrawCallback;
-import org.tensorflow.demo.env.BorderedText;
-import org.tensorflow.demo.env.ImageUtils;
-import org.tensorflow.demo.env.Logger;
-import org.tensorflow.demo.tracking.MultiBoxTracker;
-
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Vector;
+import android.view.View;
+import android.view.animation.Interpolator;
 
 /**
- * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
- * objects.
+ * Created by guohuanwen on 2015/10/5.
  */
-public class DetectorActivity extends CameraActivity implements OnImageAvailableListener {
-  private static final Logger LOGGER = new Logger();
+public class WindowsLoad extends View {
+    private float pi = (float) Math.PI;
+    private String TAG = "WindowsLoad";
+    private Paint paint0;
+    private Paint paint1;
+    private Paint paint2;
+    private Paint paint3;
 
-  // Configuration values for the prepackaged multibox model.
-  private static final int MB_INPUT_SIZE = 224;
-  private static final int MB_IMAGE_MEAN = 128;
-  private static final float MB_IMAGE_STD = 128;
-  private static final String MB_INPUT_NAME = "ResizeBilinear";
-  private static final String MB_OUTPUT_LOCATIONS_NAME = "output_locations/Reshape";
-  private static final String MB_OUTPUT_SCORES_NAME = "output_scores/Reshape";
-  private static final String MB_MODEL_FILE = "file:///android_asset/multibox_model.pb";
-  private static final String MB_LOCATION_FILE =
-      "file:///android_asset/multibox_location_priors.txt";
+    private int R;
+    private float circleR;
+    private ValueAnimator circleAnimator1;
+    private ValueAnimator circleAnimator2;
+    private ValueAnimator circleAnimator3;
+    private ValueAnimator circleAnimator4;
+    private boolean init = true;
+    float x1, x2, x3, x4, y1, y2, y3, y4;
 
-  private static final int TF_OD_API_INPUT_SIZE = 300;
-  private static final String TF_OD_API_MODEL_FILE =
-      "file:///android_asset/ssd_mobilenet_v1_android_export.pb";
-  private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list.txt";
-
-  // Configuration values for tiny-yolo-voc. Note that the graph is not included with TensorFlow and
-  // must be manually placed in the assets/ directory by the user.
-  // Graphs and models downloaded from http://pjreddie.com/darknet/yolo/ may be converted e.g. via
-  // DarkFlow (https://github.com/thtrieu/darkflow). Sample command:
-  // ./flow --model cfg/tiny-yolo-voc.cfg --load bin/tiny-yolo-voc.weights --savepb --verbalise
-  private static final String YOLO_MODEL_FILE = "file:///android_asset/graph-tiny-yolo-voc.pb";
-  private static final int YOLO_INPUT_SIZE = 416;
-  private static final String YOLO_INPUT_NAME = "input";
-  private static final String YOLO_OUTPUT_NAMES = "output";
-  private static final int YOLO_BLOCK_SIZE = 32;
-
-  // Which detection model to use: by default uses Tensorflow Object Detection API frozen
-  // checkpoints.  Optionally use legacy Multibox (trained using an older version of the API)
-  // or YOLO.
-  private enum DetectorMode {
-    TF_OD_API, MULTIBOX, YOLO;
-  }
-  private static final DetectorMode MODE = DetectorMode.TF_OD_API;
-
-  // Minimum detection confidence to track a detection.
-  private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
-  private static final float MINIMUM_CONFIDENCE_MULTIBOX = 0.1f;
-  private static final float MINIMUM_CONFIDENCE_YOLO = 0.25f;
-
-  private static final boolean MAINTAIN_ASPECT = MODE == DetectorMode.YOLO;
-
-  private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
-
-  private static final boolean SAVE_PREVIEW_BITMAP = false;
-  //private static final boolean SAVE_PREVIEW_BITMAP = true;
-  private static final float TEXT_SIZE_DIP = 10;
-
-  private Integer sensorOrientation;
-
-  private Classifier detector;
-
-  private long lastProcessingTimeMs;
-  private Bitmap rgbFrameBitmap = null;
-  private Bitmap croppedBitmap = null;
-  private Bitmap croppedBitmap1 = null;
-  private Bitmap croppedBitmap2 = null;
-  private Bitmap cropCopyBitmap = null;
-
-  private boolean computingDetection = false;
-
-  private long timestamp = 0;
-
-  private Matrix frameToCropTransform;
-  private Matrix frameToCropTransform1;
-  private Matrix cropToFrameTransform;
-
-  private MultiBoxTracker tracker;
-
-  private byte[] luminanceCopy;
-
-  private BorderedText borderedText;
-  private static ImageView imageView1;
-  private Handler mHandler;
-
-  @Override
-  public void onPreviewSizeChosen(final Size size, final int rotation) {
-    final float textSizePx =
-        TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DIP, getResources().getDisplayMetrics());
-    borderedText = new BorderedText(textSizePx);
-    borderedText.setTypeface(Typeface.MONOSPACE);
-
-    tracker = new MultiBoxTracker(this);
-    mHandler = new Handler();
-
-    int cropSize = TF_OD_API_INPUT_SIZE;
-    if (MODE == DetectorMode.YOLO) {
-      detector =
-          TensorFlowYoloDetector.create(
-              getAssets(),
-              YOLO_MODEL_FILE,
-              YOLO_INPUT_SIZE,
-              YOLO_INPUT_NAME,
-              YOLO_OUTPUT_NAMES,
-              YOLO_BLOCK_SIZE);
-      cropSize = YOLO_INPUT_SIZE;
-    } else if (MODE == DetectorMode.MULTIBOX) {
-      detector =
-          TensorFlowMultiBoxDetector.create(
-              getAssets(),
-              MB_MODEL_FILE,
-              MB_LOCATION_FILE,
-              MB_IMAGE_MEAN,
-              MB_IMAGE_STD,
-              MB_INPUT_NAME,
-              MB_OUTPUT_LOCATIONS_NAME,
-              MB_OUTPUT_SCORES_NAME);
-      cropSize = MB_INPUT_SIZE;
-    } else {
-      try {
-        detector = TensorFlowObjectDetectionAPIModel.create(
-            getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
-        cropSize = TF_OD_API_INPUT_SIZE;
-      } catch (final IOException e) {
-        LOGGER.e("Exception initializing classifier!", e);
-        Toast toast =
-            Toast.makeText(
-                getApplicationContext(), "Classifier could not be initialized", Toast.LENGTH_SHORT);
-        toast.show();
-        finish();
-      }
+    public WindowsLoad(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        paint0 = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint0.setColor(Color.parseColor("#5A9EF1"));
+        paint1 = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint1.setColor(Color.parseColor("#E85952"));
+        paint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint2.setColor(Color.parseColor("#F0CB1A"));
+        paint3 = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint3.setColor(Color.parseColor("#45CA75"));
+        //R = 10;
     }
 
-    previewWidth = size.getWidth();
-    previewHeight = size.getHeight();
 
-    sensorOrientation = rotation - getScreenOrientation();
-    LOGGER.i("Camera orientation relative to screen canvas: %d", sensorOrientation);
+    float[] circleCentre;
+    float[] start1;
+    float[] start2;
+    float[] start3;
+    float[] start4;
 
-    LOGGER.i("Initializing at size %dx%d", previewWidth, previewHeight);
-    rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Config.ARGB_8888);
-    croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Config.ARGB_8888);
-	croppedBitmap1 = Bitmap.createBitmap(cropSize, cropSize, Config.ARGB_8888);
-
-    frameToCropTransform =
-        ImageUtils.getTransformationMatrix(
-            previewWidth, previewHeight,
-            cropSize, cropSize,
-            sensorOrientation, MAINTAIN_ASPECT);
-	
-	frameToCropTransform1 =
-        ImageUtils.getTransformationMatrix(
-            2560, 1920,
-            300, 300,
-            0, MAINTAIN_ASPECT);
-
-    cropToFrameTransform = new Matrix();
-    frameToCropTransform.invert(cropToFrameTransform);
-	frameToCropTransform1.invert(cropToFrameTransform);
-
-    trackingOverlay = (OverlayView) findViewById(R.id.tracking_overlay);
-    trackingOverlay.addCallback(
-        new DrawCallback() {
-          @Override
-          public void drawCallback(final Canvas canvas) {
-            tracker.draw(canvas);
-            if (isDebug()) {
-              tracker.drawDebug(canvas);
-            }
-          }
-        });
-
-    addCallback(
-        new DrawCallback() {
-          @Override
-          public void drawCallback(final Canvas canvas) {
-            if (!isDebug()) {
-              return;
-            }
-            final Bitmap copy = cropCopyBitmap;
-            if (copy == null) {
-              return;
-            }
-
-            final int backgroundColor = Color.argb(100, 0, 0, 0);
-            canvas.drawColor(backgroundColor);
-
-            final Matrix matrix = new Matrix();
-            final float scaleFactor = 2;
-            matrix.postScale(scaleFactor, scaleFactor);
-            matrix.postTranslate(
-                canvas.getWidth() - copy.getWidth() * scaleFactor,
-                canvas.getHeight() - copy.getHeight() * scaleFactor);
-            canvas.drawBitmap(copy, matrix, new Paint());
-
-            final Vector<String> lines = new Vector<String>();
-            if (detector != null) {
-              final String statString = detector.getStatString();
-              final String[] statLines = statString.split("\n");
-              for (final String line : statLines) {
-                lines.add(line);
-              }
-            }
-            lines.add("");
-
-            lines.add("Frame: " + previewWidth + "x" + previewHeight);
-            lines.add("Crop: " + copy.getWidth() + "x" + copy.getHeight());
-            lines.add("View: " + canvas.getWidth() + "x" + canvas.getHeight());
-            lines.add("Rotation: " + sensorOrientation);
-            lines.add("Inference time: " + lastProcessingTimeMs + "ms");
-
-            borderedText.drawLines(canvas, 10, canvas.getHeight() - 10, lines);
-          }
-        });
-  }
-
-  OverlayView trackingOverlay;
-  private Bitmap bmppp ;
-  private Runnable mRunnable = new Runnable() {
     @Override
-    public void run() {
-      imageView1.setImageBitmap(bmppp);
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        //初始化
+        if (init) {
+            circleCentre = new float[]{getWidth() / 2, getHeight() / 2};
+            start1 = new float[]{getWidth() / 2, R};
+            /*start2 = onCiecleCoordinate(-0.5f, start1, circleCentre);
+            start3 = onCiecleCoordinate(-0.5f, start2, circleCentre);
+            start4 = onCiecleCoordinate(-0.5f, start3, circleCentre);*/
+            start2 = onCiecleCoordinate(-1.5f, start1, circleCentre);
+            start3 = onCiecleCoordinate(-1.5f, start2, circleCentre);
+            start4 = onCiecleCoordinate(-1.5f, start3, circleCentre);
+
+            init = false;
+            R = getWidth() / 20;
+            Log.d("test3","loading : " + getWidth() + ", R :" + R);
+
+            loading();
+        }
+//        canvas.drawCircle(start1[0], start1[1], R, paint);
+//        Log.d(TAG, "onDraw() returned: "+ start1[0]+"   "+start1[1] +"   "+ start2[0]+"   "+start2[1]);
+
+        //第一个点初始位置
+        if (!circleAnimator1.isRunning()) {
+            //canvas.drawCircle(start1[0], start1[1], R, paint0);
+
+        }
+        //第二个点初始位置
+        if (!circleAnimator2.isRunning()) {
+            //canvas.drawCircle(start2[0], start2[1], R, paint1);
+        }
+        //第三个点初始位置
+        if (!circleAnimator3.isRunning()) {
+            //canvas.drawCircle(start3[0], start3[1], R, paint2);
+        }
+
+        if (!circleAnimator4.isRunning()) {
+            //canvas.drawCircle(start4[0], start4[1], R, paint3);
+        }
+
+        if (circleAnimator1.isRunning()) {
+            x1 = (float) (circleCentre[0] + circleR * Math.cos((float) circleAnimator1.getAnimatedValue()));
+            y1 = (float) (circleCentre[1] + circleR * Math.sin((float) circleAnimator1.getAnimatedValue()));
+            canvas.drawCircle(x1, y1, R, paint0);
+        }
+        if (circleAnimator2.isRunning()) {
+            x2 = (float) (circleCentre[0] + circleR * Math.cos((float) circleAnimator2.getAnimatedValue()));
+            y2 = (float) (circleCentre[1] + circleR * Math.sin((float) circleAnimator2.getAnimatedValue()));
+            canvas.drawCircle(x2, y2, R, paint1);
+        }
+        if (circleAnimator3.isRunning()) {
+            x3 = (float) (circleCentre[0] + circleR * Math.cos((float) circleAnimator3.getAnimatedValue()));
+            y3 = (float) (circleCentre[1] + circleR * Math.sin((float) circleAnimator3.getAnimatedValue()));
+            canvas.drawCircle(x3, y3, R, paint2);
+        }
+
+        if (circleAnimator4.isRunning()) {
+            x4 = (float) (circleCentre[0] + circleR * Math.cos((float) circleAnimator4.getAnimatedValue()));
+            y4 = (float) (circleCentre[1] + circleR * Math.sin((float) circleAnimator4.getAnimatedValue()));
+            canvas.drawCircle(x4, y4, R, paint3);
+        }
+
+        if (circleAnimator1.isRunning() || circleAnimator2.isRunning() || circleAnimator3.isRunning() || circleAnimator4.isRunning()) {
+            invalidate();
+        }
     }
-  };
 
-  @Override
-  protected void processImage() {
-    ++timestamp;
-    final long currTimestamp = timestamp;
-    byte[] originalLuminance = getLuminance();
-    tracker.onFrame(
-        previewWidth,
-        previewHeight,
-        getLuminanceStride(),
-        sensorOrientation,
-        originalLuminance,
-        timestamp);
-    trackingOverlay.postInvalidate();
 
-    // No mutex needed as this method is not reentrant.
-    if (computingDetection) {
-      readyForNextImage();
-      return;
-    }
-    computingDetection = true;
-    Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.person);
-    LOGGER.i("Preparing image " + currTimestamp + " for detection in bg thread." + previewWidth + ","
-		+ previewHeight +": " +bm.getWidth()  +": " +bm.getHeight() );
-    imageView1 = (ImageView)findViewById(R.id.imageView1);
+    private void loading() {
 
-    croppedBitmap2 = bm.copy(Bitmap.Config.ARGB_8888,true);
-	//rgbFrameBitmap = bm.copy(Bitmap.Config.ARGB_8888,true);	
-    rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
-	rgbFrameBitmap = croppedBitmap2.copy(Bitmap.Config.ARGB_8888,true);
-    //imageView1.setImageResource(R.drawable.person);
+        //Log.d("test3","loading : " + getWidth() + ", R :" + R);
+        //R = getWidth() / 20;
+        //R = 10 ;
+        //Log.d("test3","loading : " + getWidth() + ", R :" + R + "," + getWidth() + "," + getWidth() / 6  );
+        /*circleAnimator1.setRepeatCount(Animation.INFINITE);
+        circleAnimator2.setRepeatCount(Animation.INFINITE);
+        circleAnimator3.setRepeatCount(Animation.INFINITE);
+        circleAnimator4.setRepeatCount(Animation.INFINITE);*/
 
-    if (luminanceCopy == null) {
-      luminanceCopy = new byte[originalLuminance.length];
-    }
-    System.arraycopy(originalLuminance, 0, luminanceCopy, 0, originalLuminance.length);
-    readyForNextImage();
+        /*circleAnimator1 = getCircleData(start1, circleCentre, 0);
+        circleAnimator2 = getCircleData(start2, circleCentre, 300);
+        circleAnimator3 = getCircleData(start3, circleCentre, 600);
+        circleAnimator4 = getCircleData(start4, circleCentre, 900);*/
+        circleAnimator1 = getCircleData(start1, circleCentre, 0);
+        circleAnimator2 = getCircleData(start2, circleCentre, 0);
+        circleAnimator3 = getCircleData(start3, circleCentre, 0);
+        circleAnimator4 = getCircleData(start4, circleCentre, 0);
 
-    final Canvas canvas = new Canvas(croppedBitmap);    
-    canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform1, null);
+        circleAnimator1.setRepeatMode(ValueAnimator.RESTART);
+        circleAnimator2.setRepeatMode(ValueAnimator.RESTART);
+        circleAnimator3.setRepeatMode(ValueAnimator.RESTART);
+        circleAnimator4.setRepeatMode(ValueAnimator.RESTART);
 
-	/*final Canvas canvas1 = new Canvas(croppedBitmap1);
-    bmppp = croppedBitmap1.copy(Bitmap.Config.ARGB_8888,true);
-    mHandler.post(mRunnable);
-    canvas1.drawBitmap(rgbFrameBitmap, frameToCropTransform1, null);*/
+        circleAnimator1.start();
+        circleAnimator2.start();
+        circleAnimator3.start();
+        circleAnimator4.start();
 
-    //canvas.drawBitmap(croppedBitmap, frameToCropTransform, null);
-    //canvas.drawBitmap(bm, frameToCropTransform, null);
-    // For examining the actual TF input.
-    //if (SAVE_PREVIEW_BITMAP) {
-      //ImageUtils.saveBitmap(croppedBitmap);
-    //}
-
-    runInBackground(
-        new Runnable() {
-          @Override
-          public void run() {
-            LOGGER.i("Running detection on image " + currTimestamp);
-            final long startTime = SystemClock.uptimeMillis();
-            final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
-            bmppp = croppedBitmap.copy(Bitmap.Config.ARGB_8888,true);
-            mHandler.post(mRunnable);
-
-            lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
-
-            cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
-            final Canvas canvas = new Canvas(cropCopyBitmap);
-            final Paint paint = new Paint();
-            paint.setColor(Color.RED);
-            paint.setStyle(Style.STROKE);
-            paint.setStrokeWidth(2.0f);
-
-            float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-            switch (MODE) {
-              case TF_OD_API:
-                minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-                break;
-              case MULTIBOX:
-                minimumConfidence = MINIMUM_CONFIDENCE_MULTIBOX;
-                break;
-              case YOLO:
-                minimumConfidence = MINIMUM_CONFIDENCE_YOLO;
-                break;
+        postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                loading();
+                invalidate();
             }
+        //}, circleAnimator4.getDuration() + 900);
+        }, circleAnimator1.getDuration() + 0);
+    }
 
-            final List<Classifier.Recognition> mappedRecognitions =
-                new LinkedList<Classifier.Recognition>();
-			Log.d("test","////////////////////////////////////////////////////////////");
-            for (final Classifier.Recognition result : results) {
-                  final RectF location = result.getLocation();
+    private SlowToQuick slowToQuick = new SlowToQuick();
 
-                  if (location != null && result.getConfidence() >= minimumConfidence) {
-                    Log.d("test","" + result.getId() + "," + result.getTitle() + "," + result.toString() + "," + result.getConfidence() );
-                    canvas.drawRect(location, paint);
+    private ValueAnimator getCircleData(float[] startCoordinate, float[] RCoordinate, int delay) {
+        float x1 = startCoordinate[0];
+        float y1 = startCoordinate[1];
+        float x0 = RCoordinate[0];
+        float y0 = RCoordinate[1];
+//        Log.i(TAG, "getCircleData x y: " + x1+"  ,"+y1+"  x0  "+x0+ " y0  "+y0);
+        circleR = (float) Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+        circleR = circleR *2/3 ;
+        float param = (float) (Math.abs(y1 - y0) / circleR);
+        if (param < -1.0) {
+            param = -1.0f;
+        } else if (param > 1.0) {
+            param = 1.0f;
+        }
+        float a = (float) Math.asin(param);
+        if (x1 >= x0 && y1 >= y0) {
+            a = a;
+        } else if (x1 < x0 && y1 >= y0) {
+            a = pi - a;
+        } else if (x1 < x0 && y1 < y0) {
+            a = a + pi;
+        } else {
+            a = 2 * pi - a;
+        }
+        ValueAnimator circleAnimator = ValueAnimator.ofFloat(a, a + 2 * pi);
+        circleAnimator.setDuration(1500);
 
-                cropToFrameTransform.mapRect(location);
-                result.setLocation(location);
-                mappedRecognitions.add(result);
-              }
-            }
+        circleAnimator.setInterpolator(slowToQuick);
+        circleAnimator.setStartDelay(delay);
 
-            tracker.trackResults(mappedRecognitions, luminanceCopy, currTimestamp);
-            trackingOverlay.postInvalidate();
+        return circleAnimator;
+    }
 
-            requestRender();
-            computingDetection = false;
-          }
-        });
-  }
+    //获取同一个圆上，间隔固定角度的点坐标
+    private float[] onCiecleCoordinate(float angle, float[] start, float[] center) {
+        float x1 = start[0];
+        float y1 = start[1];
+        float x0 = center[0];
+        float y0 = center[1];
+        float R = (float) Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+        float param = (float) (Math.abs(y1 - y0) / R);
+        if (param < -1.0) {
+            param = -1.0f;
+        } else if (param > 1.0) {
+            param = 1.0f;
+        }
+        float a = (float) Math.asin(param);
+        if (x1 >= x0 && y1 >= y0) {
+            a = a;
+        } else if (x1 < x0 && y1 >= y0) {
+            a = pi - a;
+        } else if (x1 < x0 && y1 < y0) {
+            a = a + pi;
+        } else {
+            a = 2 * pi - a;
+        }
+        float x = (float) (center[0] + R * Math.cos(a + angle));
+        float y = (float) (center[1] + R * Math.sin(a + angle));
+        return new float[]{x, y};
+    }
 
-  @Override
-  protected int getLayoutId() {
-    return R.layout.camera_connection_fragment_tracking;
-  }
-
-  @Override
-  protected Size getDesiredPreviewFrameSize() {
-    return DESIRED_PREVIEW_SIZE;
-  }
-
-  @Override
-  public void onSetDebug(final boolean debug) {
-    detector.enableStatLogging(debug);
-  }
+    class SlowToQuick implements Interpolator {
+        @Override
+        public float getInterpolation(float input) {
+            return input * input;
+        }
+    }
 }
+
+
