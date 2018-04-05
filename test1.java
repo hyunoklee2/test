@@ -1,58 +1,124 @@
-package com.example.hyunok.googledots;
+package com.schibsted.spain.parallaxlayerlayout.sample;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
-import android.view.animation.TranslateAnimation;
 import android.widget.Button;
-import android.widget.RelativeLayout;
+import android.widget.RadioGroup;
+import com.schibsted.spain.parallaxlayerlayout.AnimatedTranslationUpdater;
+import com.schibsted.spain.parallaxlayerlayout.ParallaxLayerLayout;
+import com.schibsted.spain.parallaxlayerlayout.SensorTranslationUpdater;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final String TAG = "test" ;
-    private TranslateAnimation anim;
+  private ParallaxLayerLayout parallaxLayout;
+  private SensorTranslationUpdater translationUpdater;
+  private float x_count = 0 ;
+  private float y_count = 0 ;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    //setContentView(R.layout.activity_main_ovni);
+    setContentView(R.layout.activity_main_squares);
+
+    parallaxLayout = (ParallaxLayerLayout) findViewById(R.id.parallax);
+    RadioGroup updaterGroup = (RadioGroup) findViewById(R.id.updater_group);
+
+    translationUpdater = new SensorTranslationUpdater(this);
+
+    //noinspection ConstantConditions
+    updaterGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+      @Override
+      public void onCheckedChanged(RadioGroup group, int checkedId) {
+        if (checkedId == R.id.updater_sensor_button) {
+          parallaxLayout.setTranslationUpdater(translationUpdater);
+        } else if (checkedId == R.id.updater_auto_button) {
+          parallaxLayout.setTranslationUpdater(new AnimatedTranslationUpdater(0.5f));
+        }
+      }
+    });
+
+    updaterGroup.check(R.id.updater_sensor_button);
+
+    // Resets orientation when clicked
+    parallaxLayout.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        translationUpdater.reset();
+      }
+    });
+
+    Button left = (Button) findViewById(R.id.left) ;
+    Button right = (Button) findViewById(R.id.right) ;
+    Button up = (Button) findViewById(R.id.up) ;
+    Button down = (Button) findViewById(R.id.down) ;
 
 
-        final RelativeLayout iv = (RelativeLayout)findViewById(R.id.windows_relative);
-        final com.example.mylibrary.GoogleDotThinking GoogleDotThinking =
-                (com.example.mylibrary.GoogleDotThinking)findViewById(R.id.GoogleDotThinking);
 
-        Button b = (Button)findViewById(R.id.button2);
-        //GoogleDotThinking.setVisibility(View.INVISIBLE);
+    left.setOnClickListener(new Button.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        // TODO : click event
+        x_count = x_count + (float) 0.1;
+        if( Math.abs( x_count ) < 1) {
+          parallaxLayout.updateTranslations(new float[]{(float) x_count, (float) y_count});
+        }else{
+          x_count = 1;
+        }
+      }
+    });
 
-        b.setOnClickListener(new View.OnClickListener() {
-            //@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-            @Override
-            public void onClick(View v) {
+    right.setOnClickListener(new Button.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        // TODO : click event
+        x_count = x_count - (float) 0.1;
+        if( Math.abs( x_count ) < 1) {
+          parallaxLayout.updateTranslations(new float[]{(float) x_count, (float) y_count});
+        }else{
+          x_count = -1;
+        }
+      }
+    });
 
-                new Handler().postDelayed(new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        //GoogleDotThinking.stop();
-                        //GoogleDotThinking.setVisibility(View.INVISIBLE);
-                        //finish();
-                    }
-                }, 500);// 0.5초 정도 딜레이를 준 후 시작
-            }
-        });
-    }
+    up.setOnClickListener(new Button.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        // TODO : click event
+        y_count = y_count + (float) 0.1;
+        if( Math.abs( y_count ) < 1) {
+          parallaxLayout.updateTranslations(new float[]{(float) x_count, (float) y_count});
+        }else{
+          y_count = 1;
+        }
+      }
+    });
 
-    @Override
-    protected void onDestroy() {
-        Log.d(TAG,"onDestroy");
-        //Debug.stopMethodTracing();
-        android.os.Process.killProcess(android.os.Process.myPid());
-        super.onDestroy();
-        //앱의 전반적으로 돌아가던 스레드를 종료할 때 이 Debug.stopMethodTracing();
-    }
+    down.setOnClickListener(new Button.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        // TODO : click event
+          y_count = y_count - (float) 0.1;
+        if( Math.abs( y_count ) < 1) {
+          parallaxLayout.updateTranslations(new float[]{(float) x_count, (float) y_count});
+        }else{
+          y_count = -1;
+        }
+      }
+    });
+
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    translationUpdater.registerSensorManager();
+  }
+
+  @Override
+  protected void onPause() {
+    super.onPause();
+    translationUpdater.unregisterSensorManager();
+  }
 }
