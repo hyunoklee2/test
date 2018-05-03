@@ -118,3 +118,34 @@ namespace gazebo
   // Register this plugin with the simulator
   GZ_REGISTER_MODEL_PLUGIN(ModelPush)
 }
+
+
+//////////////////////////////////////////
+
+void gazebo::physics::Model::SetLinkWorldPose	(	const math::Pose & 	_pose, std::string 	_linkName )	
+
+
+void gazebo::physics::Model::SetLinkWorldPose	(	math::Pose(0,0,0,0,0,0), std::string("link"))	
+
+math::Pose reference_pose = this->model->GetWorldPose();
+
+
+math::Pose test = math::Pose(0,0,0,0,0,0)
+math::Pose test1 = test ;
+
+test->pos.x
+test.pos.x
+
+
+http://answers.gazebosim.org/question/2113/pose-of-collision-entity/
+
+this->simTime  = this->world->GetSimTime();
+
+      math::Pose orig_pose = this->model->GetWorldPose();
+      math::Pose pose = orig_pose;
+      pose.pos.x = 5.0*sin(0.1*this->simTime.Double());
+      pose.rot.SetFromEuler(math::Vector3(0, 0, 2.0*this->simTime.Double()));
+
+
+https://github.com/arpg/Gazebo/blob/master/examples/plugins/pr2_pose_test.cc
+
