@@ -165,3 +165,21 @@ namespace gazebo
   // Register this plugin with the simulator
   GZ_REGISTER_MODEL_PLUGIN(ModelPush)
 }
+
+
+ if (links[i]->GetName().compare(light_r) == 0){
+		  		light_red_pose = links[i]->GetWorldPose() ;		  	
+		  	}else if (links[i]->GetName().compare(light_g) == 0){
+		  		light_green_pose = links[i]->GetWorldPose() ;		  	
+		  	}else if (links[i]->GetName().compare(light_y) == 0){
+		  		light_yellow_pose = links[i]->GetWorldPose() ;		  	
+		  	}else if (links[i]->GetName().compare(traffic_bar) == 0){				
+ 	            ignition::math::Vector3d bar_size_x = links[i]->scale;
+				double  test = bar_size_x.x ;
+				double  test = bar_size_x.UnitX ;
+				double  test = bar_size_x.X() ;
+				double  test = bar_size.
+		  		double  test = traffic_bar_pose = links[i]->GetWorldPose() ;
+				traffic_bar_pose2 = math::Pose( traffic_bar_pose.pos.x,traffic_bar_pose.pos.y,traffic_bar_pose.pos.z
+					,traffic_bar_pose.rot.z,traffic_bar_pose.rot.w,traffic_bar_pose.rot.x ) ;
+		  	}
