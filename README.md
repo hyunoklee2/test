@@ -75,3 +75,5 @@ subscribe topic list
  When control mode is voice, Android_controllerSample Project UI.
 
 <img src="/picture/Screenshot_2018-02-04-11-54-22.png" width="70%" height="70%">
+[![Video Label](http://img.youtube.com/vi/uLR1RNqJ1Mw/0.jpg)](https://youtu.be/uLR1RNqJ1Mw?t=0s) 
+
