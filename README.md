@@ -1,5 +1,5 @@
 traffic light operating , Click image to link to YouTube video.   
-[![Video Label](http://img.youtube.com/vi/h52HkYnf9bk/1.jpg)](https://youtu.be/h52HkYnf9bk?t=0s)  
+[![Video Label](http://img.youtube.com/vi/h52HkYnf9bk/0.jpg)](https://youtu.be/h52HkYnf9bk?t=0s)  
 [![Video Label](http://img.youtube.com/vi/zywU8-pVBVQ/1.jpg)](https://youtu.be/h52HkYnf9bk?t=0s)  
 
 https://youtu.be/zywU8-pVBVQ
