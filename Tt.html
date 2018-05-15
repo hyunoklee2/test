@@ -1,1 +1,20 @@
-<!DOCTYPE html> <!-- 문서타입 --> <html lang="ko"> <!-- 휴먼랭귀지 --> <head> <meta charset="utf-8"> <!-- 문자셋 --> <title>웹페이지 제목</title> </head> <body> <header></header> <!-- 첫머리 --> <nav></nav> <!-- 메뉴 --> <article></article> <!-- 본문 --> <footer></footer> <!-- 끝머리 --> </body> </html>
+<launch>
+  <env name="GAZEBO_RESOURCE_PATH" value="$(find turtlebot3_traffic_course)/worlds" />
+  <!--<arg name="model" default="burger" doc="model type [burger, waffle, waffle_pi]"/>-->
+  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+  <arg name="x_pos" default="0.245"/>
+  <arg name="y_pos" default="-1.787"/>
+  <arg name="z_pos" default="0"/> 
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <!--<arg name="world_name" value="$(find turtlebot3_traffic_course)/worlds/course_burger.world"/>-->
+    <arg name="world_name" value="$(find turtlebot3_traffic_course)/worlds/turtlebot3_autorace_$(arg model).world"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="debug" value="false"/>
+  </include>     
+
+  <param name="robot_description" command="$(find xacro)/xacro.py $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3_burger -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
+  
+</launch>
