@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+################################################################################
+# Copyright 2018 ROBOTIS CO., LTD.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+################################################################################
+
+# Author: Ryu Woon Jung (Leon)
+ 
+import rospy
+import numpy as np
+import math
+import tf
+from enum import Enum
+from std_msgs.msg import UInt8, Float64, String
+from sensor_msgs.msg import LaserScan
+from geometry_msgs.msg import Twist, PoseStamped
+from nav_msgs.msg import Odometry
+from move_base_msgs.msg import MoveBaseActionResult
+import time
+
+class DetectTunnel():
+    def __init__(self):
+        #self.sub_tunnel_order = rospy.Subscriber('/detect/tunnel_order', UInt8, self.cbTunnelOrder, queue_size=1)
+        #self.sub_arrival_status = rospy.Subscriber("/move_base/result", MoveBaseActionResult, self.cbGetNavigationResult, queue_size=1)
+        #self.sub_odom = rospy.Subscriber('/odom', Odometry, self.cbOdom, queue_size=1)
+
+        #self.pub_tunnel_return = rospy.Publisher('/detect/tunnel_stamped', UInt8, queue_size=1)
+        self.pub_goal_pose_stamped = rospy.Publisher("/move_base_simple/goal", PoseStamped, queue_size=1)
+        rospy.loginfo("set main")
+        self.fnPubGoalPose()
+        
+	self.fnPubGoalPose()
+        rospy.loginfo("publish")
+        time.sleep(10)
+        self.fnPubGoalPose()
+        rospy.loginfo("publish")
+        time.sleep(10)
+        self.fnPubGoalPose()
+        rospy.loginfo("publish")
+        #self.pub_cmd_vel = rospy.Publisher('/control/cmd_vel', Twist, queue_size = 1)
+        #self.pub_max_vel = rospy.Publisher('/control/max_vel', Float64, queue_size = 1)
+
+        #self.StepOfTunnel = Enum('StepOfTunnel', 'searching_tunnel_sign go_in_to_tunnel navigation go_out_from_tunnel exit')
+
+        #self.is_navigation_finished = False
+        #self.is_tunnel_finished = False
+
+        #self.last_current_theta = 0.0
+    
+
+    def fnPubGoalPose(self):
+        goalPoseStamped = PoseStamped()
+
+        goalPoseStamped.header.frame_id = "map"
+        goalPoseStamped.header.stamp = rospy.Time.now()
+
+        goalPoseStamped.pose.position.x = 0.0
+        goalPoseStamped.pose.position.y = 1.0
+        goalPoseStamped.pose.position.z = 0.0
+
+        goalPoseStamped.pose.orientation.x = 0.0
+        goalPoseStamped.pose.orientation.y = 0.0
+        goalPoseStamped.pose.orientation.z = 0.707669819124
+        goalPoseStamped.pose.orientation.w = 0.70654329457
+
+        self.pub_goal_pose_stamped.publish(goalPoseStamped)
+
+
+    def main(self):
+        rospy.spin()
+
+if __name__ == '__main__':
+    rospy.init_node('detect_tunnel')
+    node = DetectTunnel()
+    node.main()
