@@ -1,201 +1,257 @@
 ﻿/**
- * @file /src/qnode.cpp
+ * @file /src/main_window.cpp
  *
- * @brief Ros communication central!
+ * @brief Implementation for the qt gui.
  *
  * @date February 2011
  **/
-
 /*****************************************************************************
 ** Includes
 *****************************************************************************/
 
-#include <ros/ros.h>
-#include <ros/network.h>
-#include <string>
-#include <std_msgs/String.h>
-#include <sstream>
-#include "../include/open_manipulator_control_gui/qnode.hpp"
-#include <ar_track_alvar_msgs/AlvarMarkers.h>
-#include <ar_track_alvar_msgs/AlvarMarker.h>
-
+#include <QtGui>
+#include <QMessageBox>
+#include <iostream>
+#include "../include/open_manipulator_control_gui/main_window.hpp"
+#include <unistd.h>
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
 
 namespace open_manipulator_control_gui {
 
+using namespace Qt;
+
 /*****************************************************************************
-** Implementation
+** Implementation [MainWindow]
 *****************************************************************************/
 
-QNode::QNode(int argc, char** argv ) :
-	init_argc(argc),
-	init_argv(argv)
-	{}
-
-QNode::~QNode() {
-    if(ros::isStarted()) {
-      ros::shutdown(); // explicitly needed since we use ros::start();
-      ros::waitForShutdown();
-    }
-	wait();
-}
-
-bool QNode::init() {
-	ros::init(init_argc,init_argv,"open_manipulator_control_gui");
-	if ( ! ros::master::check() ) {
-		return false;
-	}
-	ros::start(); // explicitly needed since our nodehandle is going out of scope.
-	ros::NodeHandle n;
-	// Add your ros communications here.
-  chain_joint_states_sub_ = n.subscribe("open_manipulator/joint_states", 10, &QNode::jointStatesCallback, this);
-  chain_kinematics_pose_sub_ = n.subscribe("open_manipulator/kinematics_pose", 10, &QNode::kinematicsPoseCallback, this);
-  ar_marker_pose_sub = n.subscribe("/ar_pose_marker", 10, &QNode::arMarkerPoseMsgCallback, this);
-
-  goal_joint_space_path_client_ = n.serviceClient<open_manipulator_msgs::SetJointPosition>("open_manipulator/goal_joint_space_path");
-  goal_task_space_path_client_ = n.serviceClient<open_manipulator_msgs::SetKinematicsPose>("open_manipulator/goal_task_space_path");
-  goal_tool_control_client_ = n.serviceClient<open_manipulator_msgs::SetJointPosition>("open_manipulator/goal_tool_control");
-
-  start();
-	return true;
-}
-
-void QNode::run() {
-  ros::Rate loop_rate(10);
-  int count = 0;
-	while ( ros::ok() ) {
-
-		ros::spinOnce();
-		loop_rate.sleep();
-		++count;
-	}
-	std::cout << "Ros shutdown, proceeding to close the gui." << std::endl;
-}
-
-
-void QNode::jointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg)
+MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
+  : QMainWindow(parent)
+  , qnode(argc,argv)
 {
-  std::vector<double> temp_angle;
-  temp_angle.resize(NUM_OF_JOINT);
-  for(int i = 0; i < msg->name.size(); i ++)
+  ui.setupUi(this); // Calling this incidentally connects all ui's triggers to on_...() callbacks in this class.
+  QObject::connect(ui.actionAbout_Qt, SIGNAL(triggered(bool)), qApp, SLOT(aboutQt())); // qApp is a global variable for the application
+  connect(ui.tabWidget, SIGNAL(currentChanged(int)), this, SLOT(tabSelected()));
+
+  qnode.init();
+
+}
+
+MainWindow::~MainWindow() {}
+
+void MainWindow::timerCallback()
+{
+
+  std::vector<double> joint_angle = qnode.getPresentJointAngle();
+  if(joint_angle.size() != 4)
+    return;
+
+  ui.txt_j1->setText(QString::number(joint_angle.at(0),'f', 3));
+  ui.txt_j2->setText(QString::number(joint_angle.at(1),'f', 3));
+  ui.txt_j3->setText(QString::number(joint_angle.at(2),'f', 3));
+  ui.txt_j4->setText(QString::number(joint_angle.at(3),'f', 3));
+
+  std::vector<double> position = qnode.getPresentKinematicsPose();
+  if(position.size() != 3)
+    return;
+
+  ui.txt_x->setText(QString::number(position.at(0),'f', 3));
+  ui.txt_y->setText(QString::number(position.at(1),'f', 3));
+  ui.txt_z->setText(QString::number(position.at(2),'f', 3));
+}
+void MainWindow::tabSelected()
+{
+  if(ui.tabWidget->currentIndex()==0)
+    on_btn_read_joint_angle_clicked();
+  if(ui.tabWidget->currentIndex()==1)
+    on_btn_read_kinematic_pose_clicked();
+}
+
+void MainWindow::writeLog(QString str)
+{
+  ui.plainTextEdit_log->moveCursor (QTextCursor::End);
+  ui.plainTextEdit_log->appendPlainText(str);
+}
+
+void MainWindow::on_btn_timer_start_clicked(void)
+{
+  timer = new QTimer(this);
+  connect(timer, SIGNAL(timeout()), this, SLOT(timerCallback()));
+  timer->start(100);
+
+  writeLog("QTimer start : 100ms");
+  ui.btn_timer_start->setEnabled(false);
+  ui.btn_gripper_close->setEnabled(true);
+  ui.btn_gripper_open->setEnabled(true);
+  ui.btn_home_pose->setEnabled(true);
+  ui.btn_init_pose->setEnabled(true);
+  ui.btn_read_joint_angle->setEnabled(true);
+  ui.btn_read_kinematic_pose->setEnabled(true);
+  ui.btn_send_joint_angle->setEnabled(true);
+  ui.btn_send_kinematic_pose->setEnabled(true);
+  ui.btn_set_gripper->setEnabled(true);
+}
+
+void MainWindow::on_btn_init_pose_clicked(void)
+{
+  std::vector<std::string> joint_name;
+  std::vector<double> joint_angle;
+  double path_time = 2.0;
+  joint_name.push_back("joint1"); joint_angle.push_back(0.0);
+  joint_name.push_back("joint2"); joint_angle.push_back(0.0);
+  joint_name.push_back("joint3"); joint_angle.push_back(0.0);
+  joint_name.push_back("joint4"); joint_angle.push_back(0.0);
+
+  if(!qnode.setJointSpacePath(joint_name, joint_angle, path_time))
   {
-    if(!msg->name.at(i).compare("joint1"))  temp_angle.at(0) = (msg->position.at(i));
-    else if(!msg->name.at(i).compare("joint2"))  temp_angle.at(1) = (msg->position.at(i));
-    else if(!msg->name.at(i).compare("joint3"))  temp_angle.at(2) = (msg->position.at(i));
-    else if(!msg->name.at(i).compare("joint4"))  temp_angle.at(3) = (msg->position.at(i));
+    writeLog("[ERR!!] Failed to send service");
+    return;
   }
-  present_joint_angle = temp_angle;
-}
 
-void QNode::kinematicsPoseCallback(const open_manipulator_msgs::KinematicsPose::ConstPtr &msg)
-{
-  std::vector<double> temp_position;
-  temp_position.push_back(msg->pose.position.x);
-  temp_position.push_back(msg->pose.position.y);
-  temp_position.push_back(msg->pose.position.z);
-  present_kinematic_position = temp_position;
-  std::cout << "id000000" << ar_marker_pose.id <<"ar_marker subscribe " << msg->pose.position.x <<","<< msg->pose.position.y <<","<< msg->pose.position.z <<","<< std::endl;
+  writeLog("Send joint angle to init. pose");
+
+  usleep(2500000);
   
-}
+  joint_name.push_back("joint1"); joint_angle.push_back(0.0);
+  joint_name.push_back("joint2"); joint_angle.push_back(0.0);
+  joint_name.push_back("joint3"); joint_angle.push_back(0.0);
+  joint_name.push_back("joint4"); joint_angle.push_back(0.0);
 
-ar_track_alvar_msgs::AlvarMarker ar_marker_pose;
+  if(!qnode.setJointSpacePath(joint_name, joint_angle, path_time))
+  {
+    writeLog("[ERR!!] Failed to send service");
+    return;
+  }
 
-
-void QNode::arMarkerPoseMsgCallback(const ar_track_alvar_msgs::AlvarMarkers::ConstPtr &msg)
-{
-    if (msg->markers.size() == 0)
-          return;
-
-    std::cout << "ar_marker subscribe " << std::endl;
-
-    ar_marker_pose = msg->markers[0];
-
-        //std::cout.precision(2);
-
-        std::cout << "id111111" << ar_marker_pose.id <<"ar_marker subscribe " << ar_marker_pose.pose.pose.position.x <<","<< ar_marker_pose.pose.pose.position.y <<","<< ar_marker_pose.pose.pose.position.z <<","<< std::endl;
+  usleep(2500000);
   
+  joint_name.push_back("joint1"); joint_angle.push_back(0.0);
+  joint_name.push_back("joint2"); joint_angle.push_back(0.0);
+  joint_name.push_back("joint3"); joint_angle.push_back(0.0);
+  joint_name.push_back("joint4"); joint_angle.push_back(0.0);
 
-    if (ar_marker_pose.id != 1)
-          return;
-  
-  open_manipulator_msgs::SetKinematicsPose srv;
-  double secs =ros::Time::now().toSec();
-
-  srv.request.kinematics_pose.pose.position.x = ar_marker_pose.pose.pose.position.y;
-  srv.request.kinematics_pose.pose.position.y = -ar_marker_pose.pose.pose.position.x;
-  //srv.request.kinematics_pose.pose.position.z = ar_marker_pose.pose.pose.position.z/10+0.04;
-  srv.request.kinematics_pose.pose.position.z = 0.2;
-  srv.request.path_time = 1;
-
-  if(goal_task_space_path_client_.call(srv))
+  if(!qnode.setJointSpacePath(joint_name, joint_angle, path_time))
   {
-     std::cout << "11111111111 "<< srv.response.isPlanned << std::endl;
-     return ;
-     
+    writeLog("[ERR!!] Failed to send service");
+    return;
   }
-  std::cout << "a2222222222222 " << std::endl;
-
-
-
 
 }
 
-std::vector<double> QNode::getPresentJointAngle()
+void MainWindow::on_btn_home_pose_clicked(void)
 {
-  return present_joint_angle;
-}
-std::vector<double> QNode::getPresentGripperAngle()
-{
-  return present_gripper_angle;
-}
-std::vector<double> QNode::getPresentKinematicsPose()
-{
-  return present_kinematic_position;
-}
+  std::vector<std::string> joint_name;
+  std::vector<double> joint_angle;
+  double path_time = 2.0;
 
-bool QNode::setJointSpacePath(std::vector<std::string> joint_name, std::vector<double> joint_angle, double path_time)
-{
-  open_manipulator_msgs::SetJointPosition srv;
-  srv.request.joint_position.joint_name = joint_name;
-  srv.request.joint_position.position = joint_angle;
-  srv.request.path_time = path_time;
-
-  if(goal_joint_space_path_client_.call(srv))
+  joint_name.push_back("joint1"); joint_angle.push_back(0.0);
+  joint_name.push_back("joint2"); joint_angle.push_back(-1.05);
+  joint_name.push_back("joint3"); joint_angle.push_back(0.35);
+  joint_name.push_back("joint4"); joint_angle.push_back(0.70);
+  if(!qnode.setJointSpacePath(joint_name, joint_angle, path_time))
   {
-    return srv.response.isPlanned;
+    writeLog("[ERR!!] Failed to send service");
+    return;
   }
-  return false;
+  writeLog("Send joint angle to home pose");
 }
 
-bool QNode::setToolControl(std::vector<double> joint_angle)
+void MainWindow::on_btn_gripper_open_clicked(void)
 {
-  open_manipulator_msgs::SetJointPosition srv;
-  srv.request.joint_position.position = joint_angle;
+  std::vector<double> joint_angle;
+  joint_angle.push_back(-1.0);
 
-  if(goal_tool_control_client_.call(srv))
+  if(!qnode.setToolControl(joint_angle))
   {
-    return srv.response.isPlanned;
+    writeLog("[ERR!!] Failed to send service");
+    return;
   }
-  return false;
+
+  writeLog("Send gripper open");
 }
 
-bool QNode::setTaskSpacePath(std::vector<double> kinematics_pose, double path_time)
+void MainWindow::on_btn_gripper_close_clicked(void)
 {
-  open_manipulator_msgs::SetKinematicsPose srv;
-  srv.request.kinematics_pose.pose.position.x = kinematics_pose.at(0);
-  srv.request.kinematics_pose.pose.position.y = kinematics_pose.at(1);
-  srv.request.kinematics_pose.pose.position.z = kinematics_pose.at(2);
-  srv.request.path_time = path_time;
-
-  if(goal_task_space_path_client_.call(srv))
+  std::vector<double> joint_angle;
+  joint_angle.push_back(0.5);
+  if(!qnode.setToolControl(joint_angle))
   {
-    return srv.response.isPlanned;
+    writeLog("[ERR!!] Failed to send service");
+    return;
   }
-  return false;
+
+  writeLog("Send gripper close");
 }
 
+
+void MainWindow::on_btn_read_joint_angle_clicked(void)
+{
+  std::vector<double> joint_angle = qnode.getPresentJointAngle();
+  ui.doubleSpinBox_j1->setValue(joint_angle.at(0));
+  ui.doubleSpinBox_j2->setValue(joint_angle.at(1));
+  ui.doubleSpinBox_j3->setValue(joint_angle.at(2));
+  ui.doubleSpinBox_j4->setValue(joint_angle.at(3));
+
+  writeLog("Read joint angle");
+}
+void MainWindow::on_btn_send_joint_angle_clicked(void)
+{
+  std::vector<std::string> joint_name;
+  std::vector<double> joint_angle;
+  double path_time = ui.doubleSpinBox_time_js->value();
+
+  joint_name.push_back("joint1"); joint_angle.push_back(ui.doubleSpinBox_j1->value());
+  joint_name.push_back("joint2"); joint_angle.push_back(ui.doubleSpinBox_j2->value());
+  joint_name.push_back("joint3"); joint_angle.push_back(ui.doubleSpinBox_j3->value());
+  joint_name.push_back("joint4"); joint_angle.push_back(ui.doubleSpinBox_j4->value());
+
+  if(!qnode.setJointSpacePath(joint_name, joint_angle, path_time))
+  {
+    writeLog("[ERR!!] Failed to send service");
+    return;
+  }
+
+  writeLog("Send joint angle");
+}
+void MainWindow::on_btn_read_kinematic_pose_clicked(void)
+{
+  std::vector<double> position = qnode.getPresentKinematicsPose();
+  ui.doubleSpinBox_x->setValue(position.at(0));
+  ui.doubleSpinBox_y->setValue(position.at(1));
+  ui.doubleSpinBox_z->setValue(position.at(2));
+
+  writeLog("Read task pose");
+}
+void MainWindow::on_btn_send_kinematic_pose_clicked(void)
+{
+  std::vector<double> kinematics_pose;
+  double path_time = ui.doubleSpinBox_time_cs->value();
+
+  kinematics_pose.push_back(ui.doubleSpinBox_x->value());
+  kinematics_pose.push_back(ui.doubleSpinBox_y->value());
+  kinematics_pose.push_back(ui.doubleSpinBox_z->value());
+
+  if(!qnode.setTaskSpacePath(kinematics_pose, path_time))
+  {
+    writeLog("[ERR!!] Failed to send service");
+    return;
+  }
+
+  writeLog("Send task pose");
+}
+void MainWindow::on_btn_set_gripper_clicked(void)
+{
+  std::vector<double> joint_angle;
+  joint_angle.push_back(ui.doubleSpinBox_gripper->value());
+  if(!qnode.setToolControl(joint_angle))
+  {
+    writeLog("[ERR!!] Failed to send service");
+    return;
+  }
+  writeLog("Send gripper value");
+
+}
 
 
 }  // namespace open_manipulator_control_gui
