@@ -1,31 +1,40 @@
-int main(int argc, char **argv)
+bool OM_EXAMPLE::setToolControl(std::vector<double> joint_angle)
 {
-  // Init ROS node
-  ros::init(argc, argv, "open_manipulator_example");
+  open_manipulator_msgs::SetJointPosition srv;
+  srv.request.joint_position.position = joint_angle;
 
-  OM_EXAMPLE om_example_;
-  om_example_.goalPose = om_example_.getPresentKinematicsPose();
-
-  std::vector<std::string> joint_name;
-  std::vector<double> joint_angle;
-  double path_time = 2.0;
-  joint_name.push_back("joint1"); joint_angle.push_back(0.0);
-  joint_name.push_back("joint2"); joint_angle.push_back(0.0);
-  joint_name.push_back("joint3"); joint_angle.push_back(0.0);
-  joint_name.push_back("joint4"); joint_angle.push_back(0.0);
-  setJointSpacePath(joint_name, joint_angle, path_time);
-
-  sleep(2);
-
-  ros::spinOnce();
-  
-  while(true){
-        om_example_.goalPose = om_example_.getPresentKinematicsPose();
-        sleep(2);
-	om_example_.setGoal();
-  	om_example_.setTaskSpacePath(om_example_.goalPose, 3.0);
-  }  
-
-  return 0;
-
+  if(goal_tool_control_client_.call(srv))
+  {
+    return srv.response.isPlanned;
+  }
+  return false;
 }
+
+void OM_EXAMPLE::on_btn_gripper_open_clicked(void)
+{
+  std::vector<double> joint_angle;
+  joint_angle.push_back(-1.0);
+
+  if(!qnode.setToolControl(joint_angle))
+  {
+    //writeLog("[ERR!!] Failed to send service");
+    return;
+  }
+
+  //writeLog("Send gripper open");
+}
+
+void OM_EXAMPLE::on_btn_gripper_close_clicked(void)
+{
+  std::vector<double> joint_angle;
+  joint_angle.push_back(0.5);
+  if(!qnode.setToolControl(joint_angle))
+  {
+    //writeLog("[ERR!!] Failed to send service");
+    return;
+  }
+
+  //writeLog("Send gripper close");
+}
+
+
